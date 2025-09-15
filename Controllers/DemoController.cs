@@ -28,4 +28,16 @@ public class DemoController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    [HttpDelete("{id}")]
+    public ActionResult Delete(int id)
+    {
+        if (id < 1)
+        {
+            return NotFound();
+        }
+
+        // Simulate deletion - return 204 No Content
+        return NoContent();
+    }
 }

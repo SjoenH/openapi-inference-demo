@@ -1,6 +1,23 @@
 @OpenApiInferenceDemo_HostAddress = http://localhost:5076
 
-GET {{OpenApiInferenceDemo_HostAddress}}/weatherforecast/
+# Get demo item (returns 200 with DemoDto)
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/5
 Accept: application/json
+
+###
+
+# Get demo item with invalid ID (returns 404)
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/0
+Accept: application/json
+
+###
+
+# Delete demo item (returns 204 No Content)
+DELETE {{OpenApiInferenceDemo_HostAddress}}/demo/5
+
+###
+
+# Delete demo item with invalid ID (returns 404)
+DELETE {{OpenApiInferenceDemo_HostAddress}}/demo/0
 
 ###
