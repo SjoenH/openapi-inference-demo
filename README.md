@@ -1,6 +1,49 @@
 # OpenAPI Inference Demo
 
-This project demonstrates the significant limitations of OpenAPI automatic inference in ASP.NET Core WebAPI applications. While ASP.NET Core can automatically generate OpenAPI documentation from controller methods without explicit `[ProducesResponseType]` attributes, the inference is severely limited and often inaccurate.
+This project demonstrates the significant limitations of OpenAPI automatic inference in ASP.NET Core WebAPI applications. We have tested both Swashbuckle (with .NET 8) and the new built-in Microsoft.AspNetCore.OpenApi package (with .NET 9), and **both exhibit identical inference limitations**.
+
+## 🚨 Critical Discovery: .NET 9 Built-in OpenAPI Has Same Limitations
+
+### 📋 Testing Results: .NET 9 vs Swashbuckle
+
+| Framework | OpenAPI Provider | Status Code Inference | Error Response Documentation |
+|-----------|------------------|----------------------|---------------------------|
+| .NET 8 | Swashbuckle.AspNetCore | ❌ All documented as 200 OK | ❌ All error responses ignored |
+| .NET 9 | Microsoft.AspNetCore.OpenApi | ❌ All documented as 200 OK | ❌ All error responses ignored |
+
+**Conclusion**: The built-in OpenAPI support in .NET 9 has **exactly the same inference limitations** as Swashbuckle. The issue is not with the OpenAPI generation library but with the fundamental approach to automatic inference in ASP.NET Core.
+
+### 📊 .NET 9 OpenAPI Spec Analysis
+
+Direct examination of the `/openapi/v1.json` endpoint in .NET 9 reveals:
+
+```json
+{
+  "paths": {
+    "/Demo/{id}": {
+      "get": {
+        "responses": {
+          "200": { "description": "OK" }  // ❌ Missing 404 documentation
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": { "description": "OK" }  // ❌ Should be 204 No Content
+        }
+      }
+    },
+    "/Demo/status/{code}": {
+      "get": {
+        "responses": {
+          "200": { "description": "OK" }  // ❌ Can return 11 different status codes
+        }
+      }
+    }
+  }
+}
+```
+
+Even endpoints that explicitly return `NoContent()` (204), `CreatedAtAction()` (201), or various error responses are documented as returning only "200 OK".
 
 ## 🚨 Key Findings: OpenAPI Inference Limitations
 
@@ -69,10 +112,36 @@ Our comprehensive testing revealed that **ALL endpoints show only "200 OK"** in 
 
 The screenshot above shows multiple endpoints in Swagger UI, all incorrectly documented as returning only "200 OK" despite their actual diverse response behaviors.
 
+## 🧪 .NET 9 Testing Methodology
+
+### Upgrade Process
+1. **Upgraded from .NET 8 to .NET 9**
+   - Updated `TargetFramework` to `net9.0`
+   - Replaced `Swashbuckle.AspNetCore` with `Microsoft.AspNetCore.OpenApi`
+   - Updated `Program.cs` to use `AddOpenApi()` and `MapOpenApi()`
+
+2. **Direct OpenAPI Spec Analysis**
+   - Accessed `/openapi/v1.json` endpoint directly (not through Swagger UI)
+   - Verified endpoints return correct HTTP status codes via curl testing
+   - Analyzed the raw JSON specification for response documentation
+
+### Test Results
+```bash
+# Endpoints work correctly
+curl http://localhost:5076/Demo/0     # Returns 404 ✅
+curl -X DELETE http://localhost:5076/Demo/1  # Returns 204 ✅ 
+curl http://localhost:5076/Demo/status/422   # Returns 422 ✅
+
+# But OpenAPI spec only shows 200 OK for all endpoints ❌
+curl http://localhost:5076/openapi/v1.json | jq '.paths'
+```
+
+This confirms the issue is with **ASP.NET Core's inference mechanism itself**, not the documentation UI or generation library.
+
 ## 🔧 Running the Demo
 
 ### Prerequisites
-- .NET 8.0 SDK
+- .NET 9.0 SDK
 - Your favorite HTTP client (curl, Postman, etc.)
 
 ### Quick Start
@@ -82,8 +151,13 @@ git clone <repository-url>
 cd openapi-inference-demo
 dotnet run
 
-# Open Swagger UI
-# Navigate to: http://localhost:5076/swagger
+# View OpenAPI specification directly
+curl http://localhost:5076/openapi/v1.json
+
+# Access endpoints (they work correctly despite missing documentation)
+curl http://localhost:5076/Demo/1        # Returns 200
+curl http://localhost:5076/Demo/0        # Returns 404 (not documented)
+curl -X DELETE http://localhost:5076/Demo/1  # Returns 204 (documented as 200)
 ```
 
 ### Testing Endpoints
