@@ -1,17 +1,17 @@
 # OpenAPI Inference Demo
 
-## 🚀 **NEW BREAKTHROUGH: Minimal APIs Solve the Problem!**
+## 🔍 **Investigation Results: No Automatic Solution Found**
 
-**Great news!** Our investigation has **confirmed that minimal APIs provide a significantly superior solution** to OpenAPI inference limitations compared to traditional controllers.
+**Important Update**: After thorough testing, we found that **both controller-based APIs and minimal APIs exhibit identical OpenAPI inference limitations** when relying on automatic inference without manual annotations.
 
 ### 📊 **Key Findings Summary**
 
-✅ **Minimal APIs + `.Produces()` method chaining** = **Perfect OpenAPI documentation**  
-✅ **Cleaner, more maintainable code** than controller attributes  
-✅ **Inline response definitions** right next to endpoint logic  
-✅ **All status codes properly documented** (200, 201, 204, 404, 500, etc.)
+❌ **Minimal APIs without `.Produces()`** = **Same "200 Success" limitation as controllers**  
+❌ **TypedResults without annotations** = **Same inference problems**  
+❌ **No automatic status code inference** in either approach  
+❌ **Error responses consistently ignored** by OpenAPI generators
 
-**Result**: The approach described in the problem statement has been **successfully demonstrated** to solve OpenAPI inference issues with a modern, clean solution.
+**Conclusion**: The OpenAPI inference limitations are **fundamental to ASP.NET Core's design**, not specific to controllers or minimal APIs. Manual annotations (`.Produces()` or `[ProducesResponseType]`) are required for accurate documentation.
 
 ---
 
@@ -92,14 +92,16 @@ Methods with conditional logic that can return multiple status codes only show *
 
 Our comprehensive testing revealed that **ALL endpoints show only "200 OK"** in Swagger UI, regardless of their actual behavior:
 
-| Endpoint | Actual Behavior | Swagger Documentation |
-|----------|----------------|----------------------|
-| `GET /demo/{id}` | 200 OK with data, 404 Not Found | ✅ 200 OK only |
-| `POST /demo` | 201 Created, 400 Bad Request | ❌ 200 OK only |
-| `PUT /demo/{id}` | 200 OK, 400 Bad Request, 403 Forbidden, 404 Not Found | ❌ 200 OK only |
-| `DELETE /demo/{id}` | 204 No Content, 404 Not Found | ❌ 200 OK only |
-| `GET /demo/status/{code}` | 200, 201, 202, 204, 400, 401, 403, 404, 409, 422, 500 | ❌ 200 OK only |
-| `POST /demo/validation` | 200 OK, 400, 403, 409, 422 | ❌ 200 OK only |
+### Controller-Based APIs vs Minimal APIs
+
+| Endpoint Type | Actual Behavior | Controller Documentation | Minimal API Documentation | 
+|---------------|----------------|----------------------|---------------------------|
+| `GET /{id}` | 200 OK with data, 404 Not Found | ❌ 200 OK only | ❌ 200 OK only |
+| `POST /` | 201 Created, 400 Bad Request | ❌ 200 OK only | ❌ 200 OK only |
+| `DELETE /{id}` | 204 No Content, 404 Not Found | ❌ 200 OK only | ❌ 200 OK only |
+| `GET /status/{code}` | 11 different status codes | ❌ 200 OK only | ❌ 200 OK only |
+
+**Key Finding**: Minimal APIs without `.Produces()` annotations exhibit **identical inference limitations** to controller-based APIs without `[ProducesResponseType]` attributes.
 
 ## 🧪 Demonstration Endpoints
 
