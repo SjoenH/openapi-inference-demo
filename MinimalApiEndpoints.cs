@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http.HttpResults;
+
 namespace OpenApiInferenceDemo;
 
 public static class MinimalApiEndpoints
@@ -6,14 +8,14 @@ public static class MinimalApiEndpoints
     {
         var group = app.MapGroup("/minimal-api/demo")
             .WithTags("MinimalApiDemo")
-            .WithDisplayName("Minimal API Demo Endpoints");
+            .WithDisplayName("Minimal API Demo Endpoints with TypedResults");
 
-        // GET /minimal-api/demo/{id} - Testing automatic inference without annotations
-        group.MapGet("/{id}", (int id) =>
+        // GET /minimal-api/demo/{id} - Testing TypedResults for automatic OpenAPI inference
+        group.MapGet("/{id}", Results<Ok<DemoDto>, NotFound> (int id) =>
         {
             if (id < 1)
             {
-                return Results.NotFound();
+                return TypedResults.NotFound();
             }
 
             var result = new DemoDto
@@ -22,15 +24,15 @@ public static class MinimalApiEndpoints
                 Name = $"Demo Item {id}",
                 CreatedAt = DateTime.UtcNow
             };
-            return Results.Ok(result);
+            return TypedResults.Ok(result);
         });
 
-        // POST /minimal-api/demo - Testing automatic inference without annotations
-        group.MapPost("/", (DemoDto item) =>
+        // POST /minimal-api/demo - Testing TypedResults for automatic OpenAPI inference
+        group.MapPost("/", Results<Created<DemoDto>, BadRequest<string>> (DemoDto item) =>
         {
             if (string.IsNullOrEmpty(item.Name))
             {
-                return Results.BadRequest("Name is required");
+                return TypedResults.BadRequest("Name is required");
             }
 
             var created = new DemoDto
@@ -41,25 +43,25 @@ public static class MinimalApiEndpoints
             };
 
             // Return 201 Created with location header
-            return Results.Created($"/minimal-api/demo/{created.Id}", created);
+            return TypedResults.Created($"/minimal-api/demo/{created.Id}", created);
         });
 
-        // PUT /minimal-api/demo/{id} - Using TypedResults without .Produces() annotations
-        group.MapPut("/{id}", (int id, DemoDto item) =>
+        // PUT /minimal-api/demo/{id} - Testing TypedResults for automatic OpenAPI inference
+        group.MapPut("/{id}", Results<Ok<DemoDto>, NotFound, BadRequest<string>, ForbidHttpResult> (int id, DemoDto item) =>
         {
             if (id < 1)
             {
-                return Results.NotFound();
+                return TypedResults.NotFound();
             }
 
             if (string.IsNullOrEmpty(item.Name))
             {
-                return Results.BadRequest("Name is required");
+                return TypedResults.BadRequest("Name is required");
             }
 
             if (id == 999)
             {
-                return Results.Forbid();
+                return TypedResults.Forbid();
             }
 
             var result = new DemoDto
@@ -69,67 +71,37 @@ public static class MinimalApiEndpoints
                 CreatedAt = DateTime.UtcNow
             };
 
-            return Results.Ok(result);
+            return TypedResults.Ok(result);
         });
 
-        // DELETE /minimal-api/demo/{id} - Testing automatic inference without annotations
-        group.MapDelete("/{id}", (int id) =>
+        // DELETE /minimal-api/demo/{id} - Testing TypedResults for automatic OpenAPI inference
+        group.MapDelete("/{id}", Results<NoContent, NotFound> (int id) =>
         {
             if (id < 1)
             {
-                return Results.NotFound();
+                return TypedResults.NotFound();
             }
 
             // Return 204 No Content
-            return Results.NoContent();
+            return TypedResults.NoContent();
         });
 
-        // GET /minimal-api/demo/status/{code} - Testing automatic inference without annotations
-        group.MapGet("/status/{code}", (int code) =>
-        {
-            return code switch
-            {
-                200 => Results.Ok(new { message = "Success", timestamp = DateTime.UtcNow }),
-                201 => Results.Created("/minimal-api/demo/123", new { id = 123, message = "Created" }),
-                202 => Results.Accepted("/minimal-api/demo/status", new { message = "Accepted for processing" }),
-                204 => Results.NoContent(),
-                400 => Results.BadRequest("Bad request example"),
-                401 => Results.Unauthorized(),
-                403 => Results.Forbid(),
-                404 => Results.NotFound("Resource not found"),
-                409 => Results.Conflict("Resource already exists"),
-                422 => Results.UnprocessableEntity("Validation failed"),
-                500 => Results.Problem("Internal server error", statusCode: 500),
-                _ => Results.BadRequest("Unsupported status code")
-            };
-        });
-
-        // POST /minimal-api/demo/validation - Using TypedResults without .Produces() annotations
-        group.MapPost("/validation", (DemoDto item) =>
+        // POST /minimal-api/demo/validation - Testing TypedResults for automatic OpenAPI inference
+        group.MapPost("/validation", Results<Ok<DemoDto>, BadRequest<string>, UnprocessableEntity<string>> (DemoDto item) =>
         {
             if (item == null)
             {
-                return Results.BadRequest("Request body is required");
+                return TypedResults.BadRequest("Request body is required");
             }
 
             if (string.IsNullOrWhiteSpace(item.Name))
             {
-                return Results.UnprocessableEntity("Name cannot be empty or whitespace");
+                return TypedResults.UnprocessableEntity("Name cannot be empty or whitespace");
             }
 
             if (item.Name.Length > 50)
             {
-                return Results.UnprocessableEntity("Name cannot exceed 50 characters");
-            }
-
-            if (item.Name.ToLower() == "admin")
-            {
-                return Results.Forbid();
-            }
-
-            if (item.Name.ToLower() == "conflict")
-            {
-                return Results.Conflict("Item with this name already exists");
+                return TypedResults.UnprocessableEntity("Name cannot exceed 50 characters");
             }
 
             var result = new DemoDto
@@ -139,19 +111,7 @@ public static class MinimalApiEndpoints
                 CreatedAt = DateTime.UtcNow
             };
 
-            return Results.Ok(result);
-        });
-
-        // GET /minimal-api/demo/server-error - Using TypedResults without .Produces() annotations
-        group.MapGet("/server-error", () =>
-        {
-            return Results.Problem("Simulated internal server error", statusCode: 500);
-        });
-
-        // GET /minimal-api/demo/accepted - Using TypedResults without .Produces() annotations
-        group.MapGet("/accepted", () =>
-        {
-            return Results.Accepted("/minimal-api/demo/status", new { message = "Request accepted for processing", jobId = Guid.NewGuid() });
+            return TypedResults.Ok(result);
         });
     }
 }
