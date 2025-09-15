@@ -1,5 +1,9 @@
 @OpenApiInferenceDemo_HostAddress = http://localhost:5076
 
+# =============================================================================
+# Basic CRUD Operations
+# =============================================================================
+
 # Get demo item (returns 200 with DemoDto)
 GET {{OpenApiInferenceDemo_HostAddress}}/demo/5
 Accept: application/json
@@ -12,6 +16,61 @@ Accept: application/json
 
 ###
 
+# Create new demo item (returns 201 Created)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo
+Content-Type: application/json
+
+{
+  "name": "New Demo Item",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Create demo item with missing name (returns 400 Bad Request)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo
+Content-Type: application/json
+
+{
+  "name": "",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Update demo item (returns 200 OK)
+PUT {{OpenApiInferenceDemo_HostAddress}}/demo/5
+Content-Type: application/json
+
+{
+  "name": "Updated Demo Item",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Update demo item with invalid ID (returns 404)
+PUT {{OpenApiInferenceDemo_HostAddress}}/demo/0
+Content-Type: application/json
+
+{
+  "name": "Updated Demo Item",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Update system item (returns 403 Forbidden)
+PUT {{OpenApiInferenceDemo_HostAddress}}/demo/999
+Content-Type: application/json
+
+{
+  "name": "Updated System Item",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
 # Delete demo item (returns 204 No Content)
 DELETE {{OpenApiInferenceDemo_HostAddress}}/demo/5
 
@@ -19,5 +78,148 @@ DELETE {{OpenApiInferenceDemo_HostAddress}}/demo/5
 
 # Delete demo item with invalid ID (returns 404)
 DELETE {{OpenApiInferenceDemo_HostAddress}}/demo/0
+
+###
+
+# =============================================================================
+# Status Code Testing Endpoints
+# =============================================================================
+
+# Test 200 OK
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/200
+
+###
+
+# Test 201 Created
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/201
+
+###
+
+# Test 202 Accepted
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/202
+
+###
+
+# Test 204 No Content
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/204
+
+###
+
+# Test 400 Bad Request
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/400
+
+###
+
+# Test 401 Unauthorized
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/401
+
+###
+
+# Test 403 Forbidden
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/403
+
+###
+
+# Test 404 Not Found
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/404
+
+###
+
+# Test 409 Conflict
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/409
+
+###
+
+# Test 422 Unprocessable Entity
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/422
+
+###
+
+# Test 500 Internal Server Error
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/status/500
+
+###
+
+# =============================================================================
+# Validation Testing Endpoints
+# =============================================================================
+
+# Valid validation request
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "Valid Item",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Empty name (returns 422)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Whitespace name (returns 422)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "   ",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Name too long (returns 422)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "This is a very long name that exceeds the fifty character limit",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Reserved name (returns 403)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "admin",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# Conflicting name (returns 409)
+POST {{OpenApiInferenceDemo_HostAddress}}/demo/validation
+Content-Type: application/json
+
+{
+  "name": "conflict",
+  "createdAt": "2023-01-01T00:00:00Z"
+}
+
+###
+
+# =============================================================================
+# Additional Status Code Examples
+# =============================================================================
+
+# Server error endpoint
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/server-error
+
+###
+
+# Accepted endpoint
+GET {{OpenApiInferenceDemo_HostAddress}}/demo/accepted
 
 ###
