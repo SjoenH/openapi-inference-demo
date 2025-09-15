@@ -8,7 +8,7 @@ public static class MinimalApiEndpoints
             .WithTags("MinimalApiDemo")
             .WithDisplayName("Minimal API Demo Endpoints");
 
-        // GET /minimal-api/demo/{id}
+        // GET /minimal-api/demo/{id} - Testing automatic inference without annotations
         group.MapGet("/{id}", (int id) =>
         {
             if (id < 1)
@@ -23,11 +23,9 @@ public static class MinimalApiEndpoints
                 CreatedAt = DateTime.UtcNow
             };
             return Results.Ok(result);
-        })
-        .Produces<DemoDto>(200)
-        .Produces(404);
+        });
 
-        // POST /minimal-api/demo
+        // POST /minimal-api/demo - Testing automatic inference without annotations
         group.MapPost("/", (DemoDto item) =>
         {
             if (string.IsNullOrEmpty(item.Name))
@@ -44,11 +42,9 @@ public static class MinimalApiEndpoints
 
             // Return 201 Created with location header
             return Results.Created($"/minimal-api/demo/{created.Id}", created);
-        })
-        .Produces<DemoDto>(201)
-        .Produces(400);
+        });
 
-        // PUT /minimal-api/demo/{id}
+        // PUT /minimal-api/demo/{id} - Using TypedResults without .Produces() annotations
         group.MapPut("/{id}", (int id, DemoDto item) =>
         {
             if (id < 1)
@@ -74,13 +70,9 @@ public static class MinimalApiEndpoints
             };
 
             return Results.Ok(result);
-        })
-        .Produces<DemoDto>(200)
-        .Produces(400)
-        .Produces(403)
-        .Produces(404);
+        });
 
-        // DELETE /minimal-api/demo/{id}
+        // DELETE /minimal-api/demo/{id} - Testing automatic inference without annotations
         group.MapDelete("/{id}", (int id) =>
         {
             if (id < 1)
@@ -90,11 +82,9 @@ public static class MinimalApiEndpoints
 
             // Return 204 No Content
             return Results.NoContent();
-        })
-        .Produces(204)
-        .Produces(404);
+        });
 
-        // GET /minimal-api/demo/status/{code}
+        // GET /minimal-api/demo/status/{code} - Testing automatic inference without annotations
         group.MapGet("/status/{code}", (int code) =>
         {
             return code switch
@@ -112,20 +102,9 @@ public static class MinimalApiEndpoints
                 500 => Results.Problem("Internal server error", statusCode: 500),
                 _ => Results.BadRequest("Unsupported status code")
             };
-        })
-        .Produces(200)
-        .Produces(201) 
-        .Produces(202)
-        .Produces(204)
-        .Produces(400)
-        .Produces(401)
-        .Produces(403)
-        .Produces(404)
-        .Produces(409)
-        .Produces(422)
-        .Produces(500);
+        });
 
-        // POST /minimal-api/demo/validation
+        // POST /minimal-api/demo/validation - Using TypedResults without .Produces() annotations
         group.MapPost("/validation", (DemoDto item) =>
         {
             if (item == null)
@@ -161,25 +140,18 @@ public static class MinimalApiEndpoints
             };
 
             return Results.Ok(result);
-        })
-        .Produces<DemoDto>(200)
-        .Produces(400)
-        .Produces(403)
-        .Produces(409)
-        .Produces(422);
+        });
 
-        // GET /minimal-api/demo/server-error
+        // GET /minimal-api/demo/server-error - Using TypedResults without .Produces() annotations
         group.MapGet("/server-error", () =>
         {
             return Results.Problem("Simulated internal server error", statusCode: 500);
-        })
-        .Produces(500);
+        });
 
-        // GET /minimal-api/demo/accepted
+        // GET /minimal-api/demo/accepted - Using TypedResults without .Produces() annotations
         group.MapGet("/accepted", () =>
         {
             return Results.Accepted("/minimal-api/demo/status", new { message = "Request accepted for processing", jobId = Guid.NewGuid() });
-        })
-        .Produces(202);
+        });
     }
 }
