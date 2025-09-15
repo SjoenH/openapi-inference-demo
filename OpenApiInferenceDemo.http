@@ -1,0 +1,6 @@
+@OpenApiInferenceDemo_HostAddress = http://localhost:5076
+
+GET {{OpenApiInferenceDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
