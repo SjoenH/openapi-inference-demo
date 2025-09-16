@@ -28,4 +28,7 @@ app.MapControllers();
 // Map minimal API endpoints for comparison
 app.MapDemoMinimalApiEndpoints();
 
+// Map minimal API endpoints WITHOUT explicit Results<> types to test inference
+app.MapDemoMinimalApiEndpointsWithoutExplicitTypes();
+
 app.Run();
