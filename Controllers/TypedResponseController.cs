@@ -14,9 +14,11 @@ public class TypedResponseController : ControllerBase
     }
 
     /// <summary>
-    /// Get a demo item by ID using strongly typed responses (similar to TypedResults approach)
+    /// Get a demo item by ID - FIXED with proper ProducesResponseType attributes
     /// </summary>
     [HttpGet("{id}")]
+    [ProducesResponseType<DemoDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<DemoDto> Get(int id)
     {
         if (id < 1)
@@ -33,9 +35,11 @@ public class TypedResponseController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new demo item using strongly typed responses (similar to TypedResults approach)
+    /// Create a new demo item - FIXED with proper ProducesResponseType attributes
     /// </summary>
     [HttpPost]
+    [ProducesResponseType<DemoDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<string>(StatusCodes.Status400BadRequest)]
     public ActionResult<DemoDto> Create(DemoDto item)
     {
         if (string.IsNullOrEmpty(item.Name))
@@ -54,9 +58,11 @@ public class TypedResponseController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a demo item using strongly typed responses (similar to TypedResults approach)
+    /// Delete a demo item - FIXED with proper ProducesResponseType attributes
     /// </summary>
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(int id)
     {
         if (id < 1)
@@ -68,9 +74,13 @@ public class TypedResponseController : ControllerBase
     }
 
     /// <summary>
-    /// Update a demo item using strongly typed responses (similar to TypedResults approach)
+    /// Update a demo item - FIXED with proper ProducesResponseType attributes
     /// </summary>
     [HttpPut("{id}")]
+    [ProducesResponseType<DemoDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<string>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult<DemoDto> Update(int id, DemoDto item)
     {
         if (id < 1)
