@@ -158,6 +158,28 @@ public static class MinimalApiEndpoints
                 CreatedAt = DateTime.UtcNow 
             });
         });
+
+        // TEST: Misleading OpenAPI - signature includes response types that are NEVER returned
+        group.MapPost("/test-misleading-openapi", Results<Ok<DemoDto>, BadRequest<string>, NotFound, Conflict<string>, UnprocessableEntity<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // This endpoint ONLY returns Ok or BadRequest, but the signature claims it can return:
+            // - NotFound (404) - NEVER returned!
+            // - Conflict (409) - NEVER returned! 
+            // - UnprocessableEntity (422) - NEVER returned!
+            // Yet OpenAPI will show ALL these as possible responses
+
+            return TypedResults.Ok(new DemoDto 
+            { 
+                Id = Random.Shared.Next(1, 1000), 
+                Name = item.Name ?? "Default", 
+                CreatedAt = DateTime.UtcNow 
+            });
+        });
     }
 
     public static void MapDemoMinimalApiEndpointsWithoutExplicitTypes(this WebApplication app)
