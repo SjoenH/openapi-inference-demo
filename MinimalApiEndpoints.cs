@@ -113,6 +113,51 @@ public static class MinimalApiEndpoints
 
             return TypedResults.Ok(result);
         });
+
+        // TEST: Does compiler enforce Results<> signature completeness?
+        // This endpoint demonstrates that ALL possible return types MUST be in the signature
+        group.MapPost("/test-compiler-enforcement", Results<Ok<DemoDto>, BadRequest<string>, Conflict<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // This Conflict return type MUST be included in Results<> signature or compilation fails
+            if (item.Name?.ToLower() == "conflict")
+            {
+                return TypedResults.Conflict("This return type MUST be in the Results<> signature!");
+            }
+
+            var result = new DemoDto
+            {
+                Id = Random.Shared.Next(1, 1000),
+                Name = item.Name ?? "Default",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            return TypedResults.Ok(result);
+        });
+
+        // TEST: What happens if we add another TypedResult without updating signature?
+        // Uncomment the line below to see compilation error:
+        group.MapPost("/test-incomplete-signature", Results<Ok<DemoDto>, BadRequest<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // EXPERIMENT: Try uncommenting this line to see compiler error:
+            // if (item.Name?.ToLower() == "error") return TypedResults.UnprocessableEntity("Missing from signature!");
+
+            return TypedResults.Ok(new DemoDto 
+            { 
+                Id = Random.Shared.Next(1, 1000), 
+                Name = item.Name ?? "Default", 
+                CreatedAt = DateTime.UtcNow 
+            });
+        });
     }
 
     public static void MapDemoMinimalApiEndpointsWithoutExplicitTypes(this WebApplication app)
