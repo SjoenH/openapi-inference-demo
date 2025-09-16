@@ -21,12 +21,12 @@ public class DemoController : ControllerBase
             return NotFound();
         }
 
-        return new DemoDto
+        return Ok(new DemoDto
         {
             Id = id,
             Name = $"Demo Item {id}",
             CreatedAt = DateTime.UtcNow
-        };
+        });
     }
 
     [HttpPost]
@@ -66,16 +66,16 @@ public class DemoController : ControllerBase
             return Forbid("Cannot update system item");
         }
 
-        return new DemoDto
+        return Ok(new DemoDto
         {
             Id = id,
             Name = item.Name,
             CreatedAt = DateTime.UtcNow
-        };
+        });
     }
 
     [HttpDelete("{id}")]
-    public ActionResult Delete(int id)
+    public IActionResult Delete(int id)
     {
         if (id < 1)
         {
