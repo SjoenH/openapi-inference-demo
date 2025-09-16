@@ -113,5 +113,192 @@ public static class MinimalApiEndpoints
 
             return TypedResults.Ok(result);
         });
+
+        // TEST: Does compiler enforce Results<> signature completeness?
+        // This endpoint demonstrates that ALL possible return types MUST be in the signature
+        group.MapPost("/test-compiler-enforcement", Results<Ok<DemoDto>, BadRequest<string>, Conflict<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // This Conflict return type MUST be included in Results<> signature or compilation fails
+            if (item.Name?.ToLower() == "conflict")
+            {
+                return TypedResults.Conflict("This return type MUST be in the Results<> signature!");
+            }
+
+            var result = new DemoDto
+            {
+                Id = Random.Shared.Next(1, 1000),
+                Name = item.Name ?? "Default",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            return TypedResults.Ok(result);
+        });
+
+        // TEST: What happens if we add another TypedResult without updating signature?
+        // Uncomment the line below to see compilation error:
+        group.MapPost("/test-incomplete-signature", Results<Ok<DemoDto>, BadRequest<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // EXPERIMENT: Try uncommenting this line to see compiler error:
+            // if (item.Name?.ToLower() == "error") return TypedResults.UnprocessableEntity("Missing from signature!");
+
+            return TypedResults.Ok(new DemoDto 
+            { 
+                Id = Random.Shared.Next(1, 1000), 
+                Name = item.Name ?? "Default", 
+                CreatedAt = DateTime.UtcNow 
+            });
+        });
+
+        // TEST: Misleading OpenAPI - signature includes response types that are NEVER returned
+        group.MapPost("/test-misleading-openapi", Results<Ok<DemoDto>, BadRequest<string>, NotFound, Conflict<string>, UnprocessableEntity<string>> (DemoDto item) =>
+        {
+            if (item == null)
+            {
+                return TypedResults.BadRequest("Request body is required");
+            }
+
+            // This endpoint ONLY returns Ok or BadRequest, but the signature claims it can return:
+            // - NotFound (404) - NEVER returned!
+            // - Conflict (409) - NEVER returned! 
+            // - UnprocessableEntity (422) - NEVER returned!
+            // Yet OpenAPI will show ALL these as possible responses
+
+            return TypedResults.Ok(new DemoDto 
+            { 
+                Id = Random.Shared.Next(1, 1000), 
+                Name = item.Name ?? "Default", 
+                CreatedAt = DateTime.UtcNow 
+            });
+        });
+    }
+
+    public static void MapDemoMinimalApiEndpointsWithoutExplicitTypes(this WebApplication app)
+    {
+        var group = app.MapGroup("/minimal-api/no-explicit-types")
+            .WithTags("MinimalApiDemo-NoExplicitTypes")
+            .WithDisplayName("Minimal API Demo WITHOUT Explicit Results<> Types");
+
+        // GET /minimal-api/no-explicit-types/{id} - Testing TypedResults WITHOUT explicit Results<> types
+        group.MapGet("/{id}", GetItemWithoutExplicitTypes);
+
+        // POST /minimal-api/no-explicit-types - Testing TypedResults WITHOUT explicit Results<> types
+        group.MapPost("/", CreateItemWithoutExplicitTypes);
+
+        // PUT /minimal-api/no-explicit-types/{id} - Testing TypedResults WITHOUT explicit Results<> types
+        group.MapPut("/{id}", UpdateItemWithoutExplicitTypes);
+
+        // DELETE /minimal-api/no-explicit-types/{id} - Testing TypedResults WITHOUT explicit Results<> types
+        group.MapDelete("/{id}", DeleteItemWithoutExplicitTypes);
+
+        // POST /minimal-api/no-explicit-types/validation - Testing TypedResults WITHOUT explicit Results<> types
+        group.MapPost("/validation", ValidateItemWithoutExplicitTypes);
+    }
+
+    // Method definitions for endpoints without explicit Results<> types
+    private static IResult GetItemWithoutExplicitTypes(int id)
+    {
+        if (id < 1)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var result = new DemoDto
+        {
+            Id = id,
+            Name = $"Demo Item {id}",
+            CreatedAt = DateTime.UtcNow
+        };
+        return TypedResults.Ok(result);
+    }
+
+    private static IResult CreateItemWithoutExplicitTypes(DemoDto item)
+    {
+        if (string.IsNullOrEmpty(item.Name))
+        {
+            return TypedResults.BadRequest("Name is required");
+        }
+
+        var created = new DemoDto
+        {
+            Id = Random.Shared.Next(1, 1000),
+            Name = item.Name,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return TypedResults.Created($"/minimal-api/no-explicit-types/{created.Id}", created);
+    }
+
+    private static IResult UpdateItemWithoutExplicitTypes(int id, DemoDto item)
+    {
+        if (id < 1)
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (string.IsNullOrEmpty(item.Name))
+        {
+            return TypedResults.BadRequest("Name is required");
+        }
+
+        if (id == 999)
+        {
+            return TypedResults.Forbid();
+        }
+
+        var result = new DemoDto
+        {
+            Id = id,
+            Name = item.Name,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return TypedResults.Ok(result);
+    }
+
+    private static IResult DeleteItemWithoutExplicitTypes(int id)
+    {
+        if (id < 1)
+        {
+            return TypedResults.NotFound();
+        }
+
+        return TypedResults.NoContent();
+    }
+
+    private static IResult ValidateItemWithoutExplicitTypes(DemoDto item)
+    {
+        if (item == null)
+        {
+            return TypedResults.BadRequest("Request body is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(item.Name))
+        {
+            return TypedResults.UnprocessableEntity("Name cannot be empty or whitespace");
+        }
+
+        if (item.Name.Length > 50)
+        {
+            return TypedResults.UnprocessableEntity("Name cannot exceed 50 characters");
+        }
+
+        var result = new DemoDto
+        {
+            Id = Random.Shared.Next(1, 1000),
+            Name = item.Name,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return TypedResults.Ok(result);
     }
 }
